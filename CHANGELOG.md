@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-13
+
 ### Added
 
 - `createSubscriber(connection, options)`, a Postgres LISTEN/NOTIFY subscriber for `pg` 8.7+ on its own dedicated connection, with pg-listen's API (`events`, `notifications`, `connect`, `close`, `listenTo`, `unlisten`, `unlistenAll`, `notify`, `getSubscribedChannels`) and options, so moving from pg-listen is an import change.
@@ -19,4 +21,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Typed channels and payloads through a generic channel map, and a `parseError` event for payloads that are not valid JSON instead of the fatal `error` event.
 - ESM and CommonJS builds, each with its own types.
 
-[Unreleased]: https://github.com/RagedPanda/pg-listen-reconnect/commits/main
+[Unreleased]: https://github.com/RagedPanda/pg-listen-reconnect/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/RagedPanda/pg-listen-reconnect/releases/tag/v0.1.0
