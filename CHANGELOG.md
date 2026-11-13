@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-11-13
+
 ### Changed
 
 - Releases are published through npm trusted publishing (OIDC) instead of an npm token, so there is no long-lived token that could leak and publish a malicious version.
@@ -25,5 +27,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Typed channels and payloads through a generic channel map, and a `parseError` event for payloads that are not valid JSON instead of the fatal `error` event.
 - ESM and CommonJS builds, each with its own types.
 
-[Unreleased]: https://github.com/RagedPanda/pg-listen-reconnect/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/RagedPanda/pg-listen-reconnect/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/RagedPanda/pg-listen-reconnect/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/RagedPanda/pg-listen-reconnect/releases/tag/v0.1.0

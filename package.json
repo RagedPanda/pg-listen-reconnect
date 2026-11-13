@@ -1,6 +1,6 @@
 {
 	"name": "pg-listen-reconnect",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "Postgres LISTEN/NOTIFY for the pg driver that stays subscribed: reconnects with backoff, re-runs LISTEN, detects half-open connections and tells you when to re-sync. A drop-in replacement for pg-listen",
 	"license": "MIT",
 	"author": "Ankur Dubey (https://github.com/RagedPanda)",
