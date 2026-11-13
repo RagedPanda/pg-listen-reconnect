@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: [22, 24]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      # The tests start their own throwaway Postgres server. Ubuntu and Windows runners ship the server
+      # binaries (test/postgres.ts finds them); macOS runners need them installed.
+      - if: runner.os == 'macOS'
+        run: brew install postgresql@17 && echo "$(brew --prefix postgresql@17)/bin" >> "$GITHUB_PATH"
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+  peer-versions:
+    # The oldest and the newest supported releases of pg.
+    strategy:
+      matrix:
+        pg: [8.7.0, latest]
+    name: pg ${{ matrix.pg }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm install --no-save pg@${{ matrix.pg }}
+      - run: npm run typecheck
+      - run: npm test
+
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm ci
+      # Fails the job if line, branch or function coverage drops below 100%.
+      - run: npm run coverage
+
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm run build
+      # Checks that the ESM and CommonJS builds each resolve with their own types.
+      - run: npx --yes @arethetypeswrong/cli@0.18.5 --pack
+      # A small benchmark run, so the script keeps working against the current API.
+      - run: npm run bench
+        env:
+          BENCH_NOTIFICATIONS: 500
+          BENCH_RUNS: 1
+          BENCH_OUTAGE_MS: 500

@@ -1,0 +1,53 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      - name: Check the tag matches package.json
+        run: |
+          node -e "const {version} = JSON.parse(require('fs').readFileSync('package.json', 'utf8')); if ('v' + version !== process.env.GITHUB_REF_NAME) { console.error('Tag ' + process.env.GITHUB_REF_NAME + ' does not match package.json version ' + version); process.exit(1); }"
+      - name: Read the release notes from CHANGELOG.md
+        run: node scripts/release-notes.ts "${GITHUB_REF_NAME#v}" > "$RUNNER_TEMP/release-notes.md"
+      - run: npm ci --ignore-scripts
+      # Uses npm trusted publishing (OIDC) once it is set up on npmjs.com; until then, the NPM_TOKEN secret.
+      # A version already on npm is skipped, so a tag for a version published by hand, or a re-run, still
+      # creates the GitHub release.
+      - name: Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          package="$(node -p "require('./package.json').name")@${GITHUB_REF_NAME#v}"
+          if npm view "$package" version > /dev/null 2>&1; then
+            echo "$package is already on npm, skipping"
+          else
+            npm publish --provenance --access public
+          fi
+      # npm can hold a publish for maintainer approval and still exit 0, so check the version is installable
+      # before announcing it. The registry can take a few minutes to show a new package or version.
+      - name: Check the version is on npm
+        run: |
+          for attempt in $(seq 1 30); do
+            npm view "pg-listen-reconnect@${GITHUB_REF_NAME#v}" version --prefer-online > /dev/null 2>&1 && exit 0
+            sleep 10
+          done
+          echo "pg-listen-reconnect@${GITHUB_REF_NAME#v} is not on npm after publishing. If npm staged it, approve it on npmjs.com, then re-run this job."
+          exit 1
+      - name: Create the GitHub release
+        run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file "$RUNNER_TEMP/release-notes.md" --verify-tag
+        env:
+          GH_TOKEN: ${{ github.token }}
